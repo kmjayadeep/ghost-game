@@ -20,9 +20,10 @@ public class GhostActivity extends Activity implements View.OnClickListener {
     private GhostDictionary dictionary;
     private boolean userTurn = false;
     private Random random = new Random();
-    TextView tvStatus, tvText;
+    TextView tvStatus, tvText, tvScore;
     Button bRestart, bChallenge;
     boolean isPlaying = true;
+    int score = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +35,7 @@ public class GhostActivity extends Activity implements View.OnClickListener {
         bRestart.setOnClickListener(this);
         bChallenge = (Button) findViewById(R.id.challenge);
         bChallenge.setOnClickListener(this);
+        tvScore = (TextView) findViewById(R.id.score);
         try {
             InputStream is = getAssets().open("words.txt");
             dictionary = new SimpleDictionary(is);
@@ -46,6 +48,8 @@ public class GhostActivity extends Activity implements View.OnClickListener {
             tvText.setText(savedInstanceState.getString("text"));
             userTurn = savedInstanceState.getBoolean("userTurn");
             isPlaying = savedInstanceState.getBoolean("isPlaying");
+            score = savedInstanceState.getInt("score");
+            tvScore.setText("Score : " + score);
             bChallenge.setEnabled(isPlaying);
         } else
             onStart(null);
@@ -60,6 +64,8 @@ public class GhostActivity extends Activity implements View.OnClickListener {
             isPlaying = false;
             bChallenge.setEnabled(false);
             userTurn = true;
+            score -= text.length();
+            tvScore.setText("Score : " + score);
             return;
         }
         char nextLetter = nextWord.charAt(text.length());
@@ -69,6 +75,8 @@ public class GhostActivity extends Activity implements View.OnClickListener {
             tvStatus.setText("You Win :)");
             isPlaying = false;
             bChallenge.setEnabled(false);
+            score += text.length();
+            tvScore.setText("Score : " + score);
             return;
         }
         userTurn = true;
@@ -120,6 +128,8 @@ public class GhostActivity extends Activity implements View.OnClickListener {
             if (text.length() >= 4 && dictionary.isWord(text)) {
                 tvStatus.setText("You Lose :(");
                 bChallenge.setEnabled(false);
+                score -= text.length();
+                tvScore.setText("Score : " + score);
                 isPlaying = false;
                 return;
             }
@@ -134,5 +144,6 @@ public class GhostActivity extends Activity implements View.OnClickListener {
         outState.putString("text", tvText.getText().toString());
         outState.putBoolean("userTurn", userTurn);
         outState.putBoolean("isPlaying", isPlaying);
+        outState.putInt("score", score);
     }
 }

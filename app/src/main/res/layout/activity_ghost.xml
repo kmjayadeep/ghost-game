@@ -33,6 +33,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_below="@id/gameStatus"
+        android:id="@+id/ll"
         android:layout_height="wrap_content">
         <Button
             android:layout_width="0dp"
@@ -55,6 +56,17 @@
             android:layout_height="wrap_content" />
 
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_below="@id/ll"
+        android:gravity="center"
+        android:layout_margin="10dp"
+        android:layout_marginTop="20dp"
+        android:text="Score : 0"
+        android:id="@+id/score"
+        android:textColor="@color/material_blue_grey_900"
+        android:layout_height="wrap_content" />
 
 
 </RelativeLayout>
