@@ -8,6 +8,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -15,13 +16,14 @@ import java.io.InputStream;
 import java.util.Random;
 
 
-public class GhostActivity extends AppCompatActivity {
+public class GhostActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String COMPUTER_TURN = "Computer's turn";
     private static final String USER_TURN = "Your turn";
     private GhostDictionary dictionary;
     private boolean userTurn = false;
     private Random random = new Random();
     TextView tvStatus, tvText;
+    Button bRestart, bChallenge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,12 +31,10 @@ public class GhostActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ghost);
         tvText = (TextView) findViewById(R.id.ghostText);
         tvStatus = (TextView) findViewById(R.id.gameStatus);
-        findViewById(R.id.restart).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onStart(null);
-            }
-        });
+        bRestart = (Button) findViewById(R.id.restart);
+        bRestart.setOnClickListener(this);
+        bChallenge = (Button) findViewById(R.id.challenge);
+        bChallenge.setOnClickListener(this);
         try {
             InputStream is = getAssets().open("words.txt");
             dictionary = new SimpleDictionary(is);
@@ -45,7 +45,22 @@ public class GhostActivity extends AppCompatActivity {
     }
 
     private void computerTurn() {
-        // Do computer turn stuff then make it the user's turn again
+        String text = tvText.getText().toString();
+
+        String nextWord = dictionary.getAnyWordStartingWith(text);
+        if (nextWord == null) {
+            tvStatus.setText("You Lose :(");
+            userTurn = true;
+            return;
+        }
+        char nextLetter = nextWord.charAt(text.length());
+        text += nextLetter;
+        tvText.setText(text);
+        if (text.length() >= 4 && dictionary.isWord(text)) {
+            tvStatus.setText("You Win :)");
+            bChallenge.setEnabled(false);
+            return;
+        }
         userTurn = true;
         tvStatus.setText(USER_TURN);
     }
@@ -58,8 +73,6 @@ public class GhostActivity extends AppCompatActivity {
             String text = tvText.getText().toString();
             text += (char) event.getUnicodeChar();
             tvText.setText(text);
-
-
         } else {
             Log.i("got not char", keyCode + "");
             return super.onKeyUp(keyCode, event);
@@ -76,6 +89,7 @@ public class GhostActivity extends AppCompatActivity {
      */
     public boolean onStart(View view) {
         userTurn = random.nextBoolean();
+        bChallenge.setEnabled(true);
         tvText.setText("");
         if (userTurn) {
             tvStatus.setText(USER_TURN);
@@ -84,5 +98,20 @@ public class GhostActivity extends AppCompatActivity {
             computerTurn();
         }
         return true;
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.getId() == R.id.restart)
+            onStart(null);
+        else {
+            String text = tvText.getText().toString();
+            if (text.length() >= 4 && dictionary.isWord(text)) {
+                tvStatus.setText("You Lose :(");
+                bChallenge.setEnabled(false);
+                return;
+            }
+            computerTurn();
+        }
     }
 }
