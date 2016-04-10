@@ -1,12 +1,10 @@
 package com.google.engedu.ghost;
 
+import android.app.Activity;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.AppCompatActivity;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -16,7 +14,7 @@ import java.io.InputStream;
 import java.util.Random;
 
 
-public class GhostActivity extends AppCompatActivity implements View.OnClickListener {
+public class GhostActivity extends Activity implements View.OnClickListener {
     private static final String COMPUTER_TURN = "Computer's turn";
     private static final String USER_TURN = "Your turn";
     private GhostDictionary dictionary;
@@ -24,6 +22,7 @@ public class GhostActivity extends AppCompatActivity implements View.OnClickList
     private Random random = new Random();
     TextView tvStatus, tvText;
     Button bRestart, bChallenge;
+    boolean isPlaying = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +40,15 @@ public class GhostActivity extends AppCompatActivity implements View.OnClickList
         } catch (IOException e) {
             e.printStackTrace();
         }
-        onStart(null);
+        if (savedInstanceState != null) {
+            Log.i("got saved", savedInstanceState.toString());
+            tvStatus.setText(savedInstanceState.getString("status"));
+            tvText.setText(savedInstanceState.getString("text"));
+            userTurn = savedInstanceState.getBoolean("userTurn");
+            isPlaying = savedInstanceState.getBoolean("isPlaying");
+            bChallenge.setEnabled(isPlaying);
+        } else
+            onStart(null);
     }
 
     private void computerTurn() {
@@ -50,6 +57,8 @@ public class GhostActivity extends AppCompatActivity implements View.OnClickList
         String nextWord = dictionary.getAnyWordStartingWith(text);
         if (nextWord == null) {
             tvStatus.setText("You Lose :(");
+            isPlaying = false;
+            bChallenge.setEnabled(false);
             userTurn = true;
             return;
         }
@@ -58,6 +67,7 @@ public class GhostActivity extends AppCompatActivity implements View.OnClickList
         tvText.setText(text);
         if (text.length() >= 4 && dictionary.isWord(text)) {
             tvStatus.setText("You Win :)");
+            isPlaying = false;
             bChallenge.setEnabled(false);
             return;
         }
@@ -67,7 +77,7 @@ public class GhostActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (Character.isLetter(event.getUnicodeChar())) {
+        if (isPlaying && Character.isLetter(event.getUnicodeChar())) {
             Log.i("got char", keyCode + "");
 
             String text = tvText.getText().toString();
@@ -89,7 +99,8 @@ public class GhostActivity extends AppCompatActivity implements View.OnClickList
      */
     public boolean onStart(View view) {
         userTurn = random.nextBoolean();
-        bChallenge.setEnabled(true);
+        isPlaying = true;
+        bChallenge.setEnabled(isPlaying);
         tvText.setText("");
         if (userTurn) {
             tvStatus.setText(USER_TURN);
@@ -109,9 +120,19 @@ public class GhostActivity extends AppCompatActivity implements View.OnClickList
             if (text.length() >= 4 && dictionary.isWord(text)) {
                 tvStatus.setText("You Lose :(");
                 bChallenge.setEnabled(false);
+                isPlaying = false;
                 return;
             }
             computerTurn();
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Log.i("saving", "data");
+        outState.putString("status", tvStatus.getText().toString());
+        outState.putString("text", tvText.getText().toString());
+        outState.putBoolean("userTurn", userTurn);
+        outState.putBoolean("isPlaying", isPlaying);
     }
 }
